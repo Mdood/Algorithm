@@ -1,0 +1,125 @@
+from nicegui import ui
+import random
+import time
+import matplotlib.pyplot as plt
+import numpy as np
+from io import BytesIO
+import base64
+
+def quicksort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quicksort(left) + middle + quicksort(right)
+
+def mergesort(arr):
+    if len(arr) <= 1:
+        return arr
+    mid = len(arr) // 2
+    left = mergesort(arr[:mid])
+    right = mergesort(arr[mid:])
+    return merge(left, right)
+
+def merge(left, right):
+    result = []
+    while left and right:
+        if left[0] < right[0]:
+            result.append(left.pop(0))
+        else:
+            result.append(right.pop(0))
+    return result + left + right
+
+def insertion_sort(arr):
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+        while j >= 0 and key < arr[j]:
+            arr[j + 1] = arr[j]
+            j -= 1
+        arr[j + 1] = key
+
+def selection_sort(arr):
+    for i in range(len(arr)):
+        min_idx = i
+        for j in range(i + 1, len(arr)):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+        arr[i], arr[min_idx] = arr[min_idx], arr[i]
+
+def bubble_sort(arr):
+    for i in range(len(arr)):
+        for j in range(len(arr) - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+
+def run_comparison():
+    size = int(size_var.value)
+    input_array = [random.randint(0, 1000) for _ in range(size)]
+
+    times = {}
+
+    start_time = time.time()
+    quicksort(input_array.copy())
+    times['Quicksort'] = time.time() - start_time
+    quicksort_time_label.text = f"Quicksort: {times['Quicksort']:.4f} seconds"
+
+    start_time = time.time()
+    mergesort(input_array.copy())
+    times['Mergesort'] = time.time() - start_time
+    mergesort_time_label.text = f"Mergesort: {times['Mergesort']:.4f} seconds"
+
+    start_time = time.time()
+    insertion_sort(input_array.copy())
+    times['Insertion Sort'] = time.time() - start_time
+    insertion_sort_time_label.text = f"Insertion Sort: {times['Insertion Sort']:.4f} seconds"
+    
+    start_time = time.time()
+    bubble_sort(input_array.copy())
+    times['Bubble Sort'] = time.time() - start_time
+    bubble_sort_time_label.text = f"Bubble Sort: {times['Bubble Sort']:.4f} seconds"
+
+    start_time = time.time()
+    selection_sort(input_array.copy())
+    times['Selection Sort'] = time.time() - start_time
+    selection_sort_time_label.text = f"Selection Sort: {times['Selection Sort']:.4f} seconds"
+
+    # Plotting the results
+    algorithms = list(times.keys())
+    execution_times = list(times.values())
+
+    fig, ax = plt.subplots()
+    ax.plot(algorithms, execution_times, marker='o', linestyle='-', color='skyblue')
+    ax.set_xlabel('Sorting Algorithms')
+    ax.set_ylabel('Time (seconds)')
+    ax.set_title('Comparison of Sorting Algorithms')
+
+    # Convert plot to PNG image in memory
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    img_str = base64.b64encode(buf.read()).decode('utf-8')
+    buf.close()
+    plt.close(fig)
+
+    # Display the plot in the UI
+    ui.image(f'data:image/png;base64,{img_str}').classes('mt-4')
+
+# Create the GUI using NiceGUI
+with ui.row().classes('items-center justify-center') as main:
+    ui.label('Select Input Size:').classes('mr-2')
+    size_var = ui.select(['100','500', '1000','2000', '5000']).classes('mr-4')
+    size_var.value = '100'
+    ui.button('Compare Sorting Algorithms', on_click=run_comparison).classes('ml-4')
+
+    with ui.column().classes('mt-4'):
+        quicksort_time_label = ui.label('')
+        mergesort_time_label = ui.label('')
+        insertion_sort_time_label = ui.label('')
+        selection_sort_time_label = ui.label('')
+        bubble_sort_time_label = ui.label('')
+
+# Run the NiceGUI app
+ui.run()
